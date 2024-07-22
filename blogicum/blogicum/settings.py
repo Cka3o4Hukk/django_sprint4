@@ -137,4 +137,4 @@ MEDIA_ROOT = BASE_DIR / 'media'
 
 MEDIA_URL = '/media/'
 
-CSRF_FAILURE_VIEW = 'testtt.views.csrf_failure'
+CSRF_FAILURE_VIEW = 'pages.views.csrf_failure'

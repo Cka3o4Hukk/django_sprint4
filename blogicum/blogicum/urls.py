@@ -25,6 +25,6 @@ if settings.DEBUG:
         settings.MEDIA_URL, document_root=settings.MEDIA_ROOT
     )
 
-handler403 = 'testtt.views.csrf_failure'
-handler404 = 'testtt.views.page_not_found'
+handler403 = 'pages.views.csrf_failure'
+handler404 = 'pages.views.page_not_found'
 #handler500 = 'pages.views.server_error'
