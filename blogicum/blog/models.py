@@ -131,3 +131,23 @@ class Comment(BaseBlogModel):
 
     def __str__(self) -> str:
         return self.title[:settings.REPRESENTATION_LENGTH]
+
+
+class Comment(BaseBlogModel):
+    text = models.TextField(
+        verbose_name='Текст комментария')
+    author = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        verbose_name='Автор публикации',
+    )
+
+
+class User(BaseBlogModel):
+    text = models.TextField(
+        verbose_name='Имя')
+    author = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        verbose_name='Автор публикации',
+    )

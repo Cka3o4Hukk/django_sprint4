@@ -14,8 +14,6 @@ urlpatterns = [
          name='edit_post'),
     path('posts/<int:post_id>/delete/', views.PostDeleteView.as_view(),
          name='delete_post'),
+    path('profile/<str:username>/', views.Profile,
+         name='profile'),
 ]
-
-#handler403 = 'core.views.csrf_failure'
-#handler404 = 'core.views.page_not_found'
-#handler500 = 'core.views.server_error'

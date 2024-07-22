@@ -27,4 +27,4 @@ if settings.DEBUG:
 
 handler403 = 'pages.views.csrf_failure'
 handler404 = 'pages.views.page_not_found'
-#handler500 = 'pages.views.server_error'
+handler500 = 'pages.views.server_error'
