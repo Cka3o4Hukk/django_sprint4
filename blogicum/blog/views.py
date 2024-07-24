@@ -5,14 +5,16 @@ from django.shortcuts import get_object_or_404
 from django.views.generic import (
     CreateView, UpdateView, DeleteView, DetailView, ListView)
 from django.views.generic.edit import FormMixin
-from django.urls import reverse_lazy
-
-
+from django.urls import reverse, reverse_lazy
+from django.utils import timezone
+from django.db.models import Count
 from .forms import PostForm, CommentForm
 from .models import Post, Category
-from .utils import (
+from .published_post import PublishedPostQuerySet
+from .utils import get_available_posts
+from .mixins import (
     OnlyAuthorMixin, CommentEditMixin,
-    BackToProfileMixin, get_available_posts)
+    BackToProfileMixin, CommentPkMixin)
 
 # Посты
 
@@ -22,7 +24,12 @@ class Index(ListView):
     template_name = 'blog/index.html'
 
     def get_queryset(self):
-        return get_available_posts()
+        now = timezone.now()
+        return Post.objects.filter(
+            is_published=True,
+            pub_date__lte=now,
+            category__is_published=True
+        ).annotate(comment_count=Count('comments')).order_by('-pub_date')
 
 
 class PostCreateView(LoginRequiredMixin, BackToProfileMixin, CreateView):
@@ -42,7 +49,8 @@ class PostEditMixin:
     pk_url_kwarg = "post_id"
 
 
-class PostEditView(LoginRequiredMixin, OnlyAuthorMixin, UpdateView):
+class PostEditView(LoginRequiredMixin, OnlyAuthorMixin, UpdateView,
+                   PostEditMixin):
     model = Post
     form_class = PostForm
     pk_url_kwarg = 'post_id'
@@ -50,7 +58,7 @@ class PostEditView(LoginRequiredMixin, OnlyAuthorMixin, UpdateView):
     success_url = reverse_lazy('blog:index')
 
     def get_success_url(self):
-        return reverse_lazy(
+        return reverse(
             "blog:post_detail", kwargs={"post_id": self.object.pk}
         )
 
@@ -68,7 +76,7 @@ class PostDeleteView(
         )
 
     def get_success_url(self):
-        return reverse_lazy(
+        return reverse(
             'blog:profile', args=[self.request.user.username]
         )
 
@@ -84,7 +92,7 @@ class PostDetailView(FormMixin, DetailView):
             return post
 
         return get_object_or_404(
-            get_available_posts(selected_related=False, comment_count=False),
+            PublishedPostQuerySet(Post).published(),
             id=post.id
         )
 
@@ -112,18 +120,16 @@ class CommentCreateView(LoginRequiredMixin,
         return super().form_valid(form)
 
 
-class CommentDeleteView(LoginRequiredMixin, OnlyAuthorMixin,
-                        CommentEditMixin, DeleteView):
+class CommentDeleteView(
+    LoginRequiredMixin, OnlyAuthorMixin, CommentPkMixin,
+        CommentEditMixin, DeleteView):
+    pass
 
-    pk_url_kwarg = 'comment_id'
-    template_name = 'blog/comment.html'
 
-
-class CommentUpdateView(LoginRequiredMixin, OnlyAuthorMixin,
-                        CommentEditMixin, UpdateView):
-
-    pk_url_kwarg = 'comment_id'
-    template_name = 'blog/comment.html'
+class CommentUpdateView(
+    LoginRequiredMixin, OnlyAuthorMixin, CommentPkMixin,
+        CommentEditMixin, UpdateView):
+    pass
 
 # Профиль
 
@@ -162,10 +168,9 @@ class CategoryView(ListView):
     paginate_by = settings.PAGINATION
 
     def get_queryset(self):
-        return (
-            get_available_posts()
-            .filter(category__slug=self.kwargs['category_slug'])
-        )
+        return (get_available_posts()
+                .filter(category__slug=self.kwargs['category_slug'])
+                )
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)

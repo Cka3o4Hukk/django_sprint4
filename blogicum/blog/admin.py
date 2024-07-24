@@ -1,6 +1,6 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
-from .models import Category, Location, Post, User
+from .models import Category, Comment, Location, Post, User
 
 
 admin.site.unregister(User)
@@ -37,5 +37,13 @@ class CategoryAdmin(admin.ModelAdmin):
 class LocationAdmin(admin.ModelAdmin):
     list_display = (
         'id', 'created_at', 'is_published'
+    )
+    search_fields = ('name', )
+
+
+@admin.register(Comment)
+class CommentAdmin(admin.ModelAdmin):
+    list_display = (
+        'text', 'author', 'created_at'
     )
     search_fields = ('name', )
