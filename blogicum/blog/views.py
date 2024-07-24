@@ -14,7 +14,7 @@ from .published_post import PublishedPostQuerySet
 from .utils import get_available_posts
 from .mixins import (
     OnlyAuthorMixin, CommentEditMixin,
-    BackToProfileMixin, CommentPkMixin)
+    BackToProfileMixin, PostEditMixin, CommentPkMixin, SpecialMixinForComment)
 
 # Посты
 
@@ -42,19 +42,8 @@ class PostCreateView(LoginRequiredMixin, BackToProfileMixin, CreateView):
         return super().form_valid(form)
 
 
-class PostEditMixin:
-    model = Post
-    form_class = PostForm
-    template_name = "blog/create.html"
-    pk_url_kwarg = "post_id"
-
-
-class PostEditView(LoginRequiredMixin, OnlyAuthorMixin, UpdateView,
-                   PostEditMixin):
-    model = Post
-    form_class = PostForm
-    pk_url_kwarg = 'post_id'
-    template_name = 'blog/create.html'
+class PostEditView(LoginRequiredMixin, PostEditMixin,
+                   OnlyAuthorMixin, UpdateView):
     success_url = reverse_lazy('blog:index')
 
     def get_success_url(self):
@@ -70,6 +59,7 @@ class PostEditView(LoginRequiredMixin, OnlyAuthorMixin, UpdateView,
 class PostDeleteView(
     LoginRequiredMixin, OnlyAuthorMixin, PostEditMixin, DeleteView
 ):
+
     def get_context_data(self, **kwargs):
         return super().get_context_data(
             form=PostForm(instance=self.object), **kwargs
@@ -85,6 +75,9 @@ class PostDetailView(FormMixin, DetailView):
     model = Post
     template_name = 'blog/detail.html'
     pk_url_kwarg = 'post_id'
+
+# 'Интерфейс метода должен совпадать с родительским.'
+# не понимаю, про что это
 
     def get_object(self):
         post = super().get_object()
@@ -106,7 +99,7 @@ class PostDetailView(FormMixin, DetailView):
 
 
 class CommentCreateView(LoginRequiredMixin,
-                        CommentEditMixin, PostEditMixin, CreateView):
+                        CommentEditMixin, SpecialMixinForComment, CreateView):
 
     def dispatch(self, request, *args, **kwargs):
         self.post_obj = get_object_or_404(

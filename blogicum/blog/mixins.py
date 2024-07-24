@@ -2,8 +2,8 @@ from django.contrib.auth.mixins import UserPassesTestMixin
 from django.shortcuts import redirect
 from django.urls import reverse
 
-from .forms import CommentForm, PostForm
-from .models import Comment
+from .forms import CommentForm, PostForm, Post
+from .models import Comment, Post
 
 
 class OnlyAuthorMixin(UserPassesTestMixin):
@@ -32,6 +32,14 @@ class BackToProfileMixin:
 
 
 class PostEditMixin:
+    model = Post
+    form_class = PostForm
+    pk_url_kwarg = 'post_id'
+    template_name = 'blog/create.html'
+
+
+class SpecialMixinForComment:
+    model = Post
     form_class = PostForm
     pk_url_kwarg = 'post_id'
     template_name = 'blog/create.html'
