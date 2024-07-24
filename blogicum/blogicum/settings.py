@@ -139,3 +139,7 @@ MEDIA_URL = '/media/'
 CSRF_FAILURE_VIEW = 'pages.views.csrf_failure'
 
 EMAIL_FILE_PATH = BASE_DIR / 'sent_emails'
+
+PAGINATION = 10
+
+TEMPLATES_DIR = BASE_DIR / 'templates'

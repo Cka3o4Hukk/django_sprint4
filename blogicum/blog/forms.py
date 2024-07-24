@@ -1,10 +1,9 @@
 from django import forms
-from .models import Post
 from django.utils import timezone
 
 from django.core.mail import send_mail
 
-from .models import Post
+from .models import Post, Comment
 
 
 class PostForm(forms.ModelForm):
@@ -25,6 +24,12 @@ class PostForm(forms.ModelForm):
         }
 
 
+class CommentForm(forms.ModelForm):
+    """Форма публикации."""
+
+    class Meta:
+        model = Comment
+        fields = ('text', )
 
 
 '''from django import forms

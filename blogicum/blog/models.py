@@ -108,46 +108,30 @@ class Post(BaseBlogModel):
         return self.title[:settings.REPRESENTATION_LENGTH]
 
 
-class Comment(BaseBlogModel):
+class Comment(models.Model):
     text = models.TextField(
-        verbose_name='Текст комментария')
+        max_length=500,
+        verbose_name="Текст комментария",
+    )
     author = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
-        verbose_name='Автор публикации',
+        verbose_name="Автор комментария",
     )
     post = models.ForeignKey(
         Post,
-        null=True,
         on_delete=models.CASCADE,
-        verbose_name='Комментируемый пост',
+    )
+    created_at = models.DateTimeField(
+        auto_now_add=True,
+        verbose_name="Дата создания",
     )
 
     class Meta:
-        default_related_name = 'comments'
-        verbose_name = 'комментарий'
-        verbose_name_plural = 'Комментарии'
-        #ordering = ('created_at',)
+        verbose_name = "комментарий"
+        verbose_name_plural = "Комментарии"
+        ordering = ("created_at",)
+        default_related_name = "comments"
 
-    def __str__(self) -> str:
-        return self.title[:settings.REPRESENTATION_LENGTH]
-
-
-class Comment(BaseBlogModel):
-    text = models.TextField(
-        verbose_name='Текст комментария')
-    author = models.ForeignKey(
-        User,
-        on_delete=models.CASCADE,
-        verbose_name='Автор публикации',
-    )
-
-
-class User(BaseBlogModel):
-    text = models.TextField(
-        verbose_name='Имя')
-    author = models.ForeignKey(
-        User,
-        on_delete=models.CASCADE,
-        verbose_name='Автор публикации',
-    )
+    def __str__(self):
+        return self.text
