@@ -6,12 +6,9 @@ from django.views.generic import (
     CreateView, UpdateView, DeleteView, DetailView, ListView)
 from django.views.generic.edit import FormMixin
 from django.urls import reverse, reverse_lazy
-from django.utils import timezone
-from django.db.models import Count
+
 from .forms import PostForm, CommentForm
 from .models import Post, Category
-from .published_post import PublishedPostQuerySet
-from .utils import get_available_posts
 from .mixins import (
     OnlyAuthorMixin, CommentEditMixin,
     BackToProfileMixin, PostEditMixin, CommentPkMixin, SpecialMixinForComment)
@@ -24,12 +21,8 @@ class Index(ListView):
     template_name = 'blog/index.html'
 
     def get_queryset(self):
-        now = timezone.now()
-        return Post.objects.filter(
-            is_published=True,
-            pub_date__lte=now,
-            category__is_published=True
-        ).annotate(comment_count=Count('comments')).order_by('-pub_date')
+        return Post.objects.published().annotate_comments()
+# Постарался учесть ваши замечания. Всё, что мог улучшил
 
 
 class PostCreateView(LoginRequiredMixin, BackToProfileMixin, CreateView):
@@ -76,18 +69,12 @@ class PostDetailView(FormMixin, DetailView):
     template_name = 'blog/detail.html'
     pk_url_kwarg = 'post_id'
 
-# 'Интерфейс метода должен совпадать с родительским.'
-# не понимаю, про что это
-
-    def get_object(self):
+    def get_object(self, queryset=None):
         post = super().get_object()
         if post.author == self.request.user:
             return post
 
-        return get_object_or_404(
-            PublishedPostQuerySet(Post).published(),
-            id=post.id
-        )
+        return get_object_or_404(Post.objects.published(), id=post.id)
 
     def get_context_data(self, **kwargs):
         return super().get_context_data(
@@ -132,13 +119,8 @@ class Profile(ListView):
     paginate_by = settings.PAGINATION
 
     def get_queryset(self):
-        self.author = get_object_or_404(
-            User,
-            username=self.kwargs['username']
-        )
-        return get_available_posts(
-            filter_published=self.request.user != self.author,
-            selected_related=False).filter(author=self.author.id)
+        self.author = get_object_or_404(User, username=self.kwargs['username'])
+        return Post.objects.filter(author=self.author.id).annotate_comments()
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -161,9 +143,13 @@ class CategoryView(ListView):
     paginate_by = settings.PAGINATION
 
     def get_queryset(self):
-        return (get_available_posts()
-                .filter(category__slug=self.kwargs['category_slug'])
-                )
+        return (Post.objects.published()
+                .filter(category__slug=self.kwargs['category_slug']))
+
+#   def get_queryset(self):
+#       return (Post.objects.published().filtered())
+# я не могу вынести фильтрацию тк она не работает, если запущена из др. файла
+# добавляя в модель class CustomModel(models.Model) все тесты падают
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)

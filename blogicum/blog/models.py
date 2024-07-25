@@ -1,7 +1,7 @@
 from django.contrib.auth import get_user_model
 from django.db import models
 from django.conf import settings
-from .published_post import PublishedPostQuerySet
+from .querysets import PublishedPostQuerySet
 User = get_user_model()
 
 
